@@ -14,7 +14,8 @@ setup(
         'pytest>=6.2.4',
         'fastavro>=1.4.0',
         'apache-airflow>=2.0.2',
-        'apache-beam>=2.20.0'
+        'apache-beam>=2.20.0',
+        'apache-airflow-providers-apache-beam>=2.0.0'
     ],
     include_package_data=True,
     python_requires='>=3.7'

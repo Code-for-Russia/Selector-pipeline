@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 import json
 from typing import Tuple, Dict, List
 
@@ -23,10 +25,12 @@ class StandardProtocolSchemaRegistry:
 
         self._registered_schemas: Dict[Tuple[ElectionLevel, ElectionType, ElectionLocationType], Dict]  = OrderedDict() # dict where key is tuple(level, type, location) and value is schema
 
-        with open("resources/org/codeforrussia/selector/schemas/common/election_1_0.avsc", "rb") as election_schema_file:
+        schemas_dir = list(Path(os.path.dirname(__file__)).parents)[4] / "resources" / "org" / "codeforrussia" / "selector" / "schemas"
+
+        with open( str(schemas_dir / "common" / "election_1_0.avsc"), "rb") as election_schema_file:
             self._election_schema = parse_schema(json.load(election_schema_file), named_schemas)
 
-        with open("resources/org/codeforrussia/selector/schemas/federal/state_duma_1_0.avsc", "rb") as state_duma_schema_file:
+        with open(str(schemas_dir / "federal" / "state_duma_1_0.avsc"), "rb") as state_duma_schema_file:
             self._registered_schemas[(ElectionLevel.FEDERAL, ElectionType.REPRESENTATIVE, None)] = parse_schema(json.load(state_duma_schema_file), named_schemas)
 
     def get_common_election_schema(self):

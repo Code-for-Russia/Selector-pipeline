@@ -1,3 +1,10 @@
+import os.path, sys
+
+f = __file__
+for _ in range(6): # dirty hack to make custom Beam modules work in Airflow
+    f = os.path.dirname(f)
+sys.path.insert(0, f)
+
 import argparse
 from typing import Dict
 
@@ -21,15 +28,12 @@ def run(argv=None):
 
     parser.add_argument('--input',
                         dest='input',
+                        required=True,
                         help='Input file to process')
-
-    parser.add_argument('--input-data-format',
-                        dest="input_data_format",
-                        type=int,
-                        help='Input data format')
 
     parser.add_argument('--output',
                         dest='output',
+                        required=True,
                         help='Output file to write results to')
 
     known_args, pipeline_args = parser.parse_known_args(argv)
