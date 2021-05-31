@@ -5,25 +5,28 @@ for _ in range(6): # dirty hack to make custom Beam modules work in Airflow
     f = os.path.dirname(f)
 sys.path.insert(0, f)
 
+print(sys.path)
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/opt/airflow/google-configs/carbide-program-314404-b1f3be733966.json"
+
 import argparse
 from typing import Dict
 
 import apache_beam as beam
 from apache_beam.io import ReadFromText
 from apache_beam.io import WriteToAvro
-from apache_beam.options.pipeline_options import PipelineOptions
+from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
 
 from org.codeforrussia.selector.pipeline.beam.processors import StandardizationBeamProcessor
 from pathlib import Path
 import json
-
+import logging
 from org.codeforrussia.selector.pipeline.input.dump_formats import SupportedInputFormat
 from org.codeforrussia.selector.standardizers.common import Standardizer
 from org.codeforrussia.selector.standardizers.schema_registry import StandardProtocolSchemaRegistry
 from org.codeforrussia.selector.standardizers.custom.shpilkin import ShpilkinDumpStandardizer
 
-
-def run(argv=None):
+def run(argv=None, save_main_session=True):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input',
@@ -38,8 +41,6 @@ def run(argv=None):
 
     known_args, pipeline_args = parser.parse_known_args(argv)
 
-    pipeline_options = PipelineOptions(pipeline_args)
-
     schema_registry = StandardProtocolSchemaRegistry()
 
     registered_schema_keys = schema_registry.get_all_registered_schema_keys()
@@ -48,6 +49,8 @@ def run(argv=None):
         SupportedInputFormat.SHPILKIN_DUMP : ShpilkinDumpStandardizer(schema_registry=schema_registry)
     }
 
+    pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options.view_as(SetupOptions).save_main_session = save_main_session
 
     with beam.Pipeline(options=pipeline_options) as p:
         lines = p | 'ReadFromGCS' >> ReadFromText(known_args.input)
@@ -59,10 +62,11 @@ def run(argv=None):
 
         for schema_key, jsons in zip(registered_schema_keys, jsonsGroupedBySchema):
             schema = schema_registry.search_schema(*schema_key)
+            output_path = (Path(known_args.output) / schema["name"].replace(".", "_")).as_posix() + ".avro"
             (jsons
              | 'Map' >> beam.Map(lambda data: data["sdata"])
-             | 'WriteToGCS' >> WriteToAvro((Path(known_args.output) / schema["name"]).as_posix(), schema=schema))
-
+             | 'WriteToGCS' >> WriteToAvro(output_path, schema=schema))
 
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
     run()
