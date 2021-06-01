@@ -14,7 +14,7 @@ from apache_beam.io import ReadFromText
 from apache_beam.io import WriteToAvro
 from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
 
-from processors import StandardizationBeamProcessor
+from org.codeforrussia.selector.beam.processors import StandardizationBeamProcessor
 from pathlib import Path
 import json
 import logging

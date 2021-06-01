@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='selector-standardizers',
-    version='0.1',
+    version='0.1.0',
     description='Electoral Data Standardization classes for the Selector project',
     long_description=open("README.md", encoding='utf-8').read(),
     long_description_content_type="text/markdown",
