@@ -18,13 +18,13 @@ GCS_CREDENTIALS_FILE = f"{AIRFLOW_HOME_DIR}/google-configs/carbide-program-31440
 
 default_args = {
     'owner': 'airflow',
+    'schedule_interval': '@daily',
 }
 
 with models.DAG(
         "selector_standardize_electoral_data",
         default_args=default_args,
         start_date=days_ago(1),
-        schedule_interval=None,
         tags=['selector'],
 ) as dag_native_python:
 
