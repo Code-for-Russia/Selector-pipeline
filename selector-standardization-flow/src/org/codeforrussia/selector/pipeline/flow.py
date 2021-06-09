@@ -1,9 +1,11 @@
+from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 from airflow import models
 from airflow.providers.apache.beam.operators.beam import (
     BeamRunPythonPipelineOperator,
 )
 from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
+from textwrap import dedent
 
 AIRFLOW_HOME_DIR = "/opt/airflow"
 # Working dirs
@@ -20,6 +22,8 @@ default_args = {
     'owner': 'airflow',
     'schedule_interval': '@daily',
 }
+
+assert OUTPUT_LOCAL_DATA_PATH != ""
 
 with models.DAG(
         "selector_standardize_electoral_data",
@@ -41,7 +45,7 @@ with models.DAG(
         py_requirements=[
             "apache-beam[gcp]==2.29.0",
             "selector-standardizers>=0.1.0",
-            "selector-standardization-beam>=0.2.0",
+            "selector-standardization-beam>=0.3.0",
         ],
         py_interpreter='python3',
         py_system_site_packages=False,
@@ -49,8 +53,14 @@ with models.DAG(
 
     upload_to_gcs = LocalFilesystemToGCSOperator(
         task_id="upload_standardized_data_to_gcs",
-        src=f"{OUTPUT_LOCAL_DATA_PATH}/*/*",
+        src=f"{OUTPUT_LOCAL_DATA_PATH}/*",
         bucket="codeforrussia-selector",
-        dst=f"{STANDARDIZED_DATA_FOLDER}/",
+        dst=f"{STANDARDIZED_DATA_FOLDER}/" + dedent("{{ds}}/"), # output data grouped in the today-date folder
     )
 
+    cleanup_local_data = BashOperator(
+       task_id="cleanup_local_data",
+       bash_command=f"rm -rf {OUTPUT_LOCAL_DATA_PATH}/*",
+    )
+
+    standardizing_pipeline >> upload_to_gcs >> cleanup_local_data
