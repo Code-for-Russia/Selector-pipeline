@@ -10,7 +10,7 @@ import json
 import logging
 from org.codeforrussia.selector.standardizer.standardizer_registry_factory import SupportedInputFormat, StandardizerRegistryFactory
 from org.codeforrussia.selector.standardizer.schemas.schema_registry_factory import StandardProtocolSchemaRegistryFactory
-from datetime import date
+
 
 def add_gcp_connection(known_args):
     if known_args.google_application_credentials is not None:
@@ -66,8 +66,7 @@ def run(argv=None):
 
         for schema_key, jsons in zip(registered_schema_keys, jsonsGroupedBySchema):
             schema = schema_registry.search_schema(*schema_key)
-            today = date.today()
-            output_path = (Path(known_args.output) / today.strftime("%d-%m-%Y") / schema["name"].replace(".", "_")).as_posix()
+            output_path = (Path(known_args.output) / schema["name"].replace(".", "_")).as_posix()
             (jsons
              | 'Map' >> beam.Map(lambda data: data["sdata"])
              | 'WriteToAvro' >> WriteToAvro(output_path, schema=schema, file_name_suffix=".avro"))
