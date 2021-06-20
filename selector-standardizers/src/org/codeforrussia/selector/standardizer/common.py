@@ -1,23 +1,28 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple, List, Dict
 
+from org.codeforrussia.selector.config.global_config import GlobalConfig
+from org.codeforrussia.selector.standardizer.recognizers.election_attribute_recognizer import ElectionAttributeRecognizer
 from org.codeforrussia.selector.standardizer.election_layers import ElectionLevel, ElectionLocationType, ElectionType
+from org.codeforrussia.selector.standardizer.recognizers.protocol_field_recognizer_registry_factory import \
+    ProtocolFieldRecognizerRegistryFactory
 from org.codeforrussia.selector.standardizer.schemas.schema_registry_factory import StandardProtocolSchemaRegistryFactory
-
+from tqdm import tqdm
 
 class Standardizer(ABC):
-    PROTOCOL_FIELD_PATTERN = "Строка"
 
-    def __init__(self, schema_registry_factory: StandardProtocolSchemaRegistryFactory):
+    def __init__(self,
+                 schema_registry_factory: StandardProtocolSchemaRegistryFactory,
+                 protocol_recognizer_registry_factory: ProtocolFieldRecognizerRegistryFactory,
+                 global_config: GlobalConfig,
+                 ):
         self.schema_registry = schema_registry_factory.get_schema_registry()
+        self.protocol_recognizer_registry = protocol_recognizer_registry_factory.get_registry(global_config=global_config)
+        self.election_attribute_recognizer = ElectionAttributeRecognizer()
         self.commission_levels = [f for f in self.schema_registry.get_common_election_schema()["fields"] if f["name"] == "commission_level"][0]["type"]["symbols"]
 
     def detect_election_attributes_by_name(self, election_name) -> Tuple[ElectionLevel, ElectionType, ElectionLocationType]:
-        # TODO: add more accurate recognition; support all combinations
-        if "депутатов государственной думы" in election_name.lower():
-            return (ElectionLevel.FEDERAL, ElectionType.REPRESENTATIVE, None)
-        else:
-            raise NotImplementedError(f"Cannot recognize election attributes by this election name: {election_name}")
+        return self.election_attribute_recognizer.recognize(election_name)
 
     def detect_commission_level(self, election_location: [str]) -> str:
         """
@@ -25,19 +30,10 @@ class Standardizer(ABC):
         :param election_location: election location
         :return:
         """
-        loc_number = len(election_location)
-        if loc_number > 0 and loc_number < len(self.commission_levels):
-            return self.commission_levels[loc_number]
+        if "УИК " in election_location[-1]:
+            return self.commission_levels[-1]
         else:
-            raise ValueError(f"Election location contains wrong number of elements; must be within [1, {len(self.commission_levels) - 1}] got {loc_number}")
-
-    def get_protocol_fields(self, schema) -> [str]:
-        """
-        Gets protocol fields for a given schema
-        :param schema:
-        :return:
-        """
-        return [f['name'] for f in schema['fields'] if 'doc' in f and f['doc'].startswith(self.PROTOCOL_FIELD_PATTERN)]
+            return self.commission_levels[-2]
 
     def convert_batch(self, batch: List[Dict]) -> List[Optional[Dict]]:
         def tuple_to_dict(output: Optional[Tuple[Dict, ElectionLevel, ElectionType, ElectionLocationType]]) -> Optional[Dict]:
@@ -50,7 +46,7 @@ class Standardizer(ABC):
             else:
                 return None
 
-        return [tuple_to_dict(self.convert(protocol_data)) for protocol_data in batch]
+        return [tuple_to_dict(self.convert(protocol_data)) for protocol_data in tqdm(batch, total=len(batch))]
 
 
 

@@ -1,16 +1,16 @@
 from enum import Enum
 
-class ElectionLevel(Enum):
-    FEDERAL = 1
-    REGIONAL = 2
-    MUNICIPAL = 3
+class ElectionLevel(str, Enum):
+    FEDERAL = "FEDERAL"
+    REGIONAL = "REGIONAL"
+    MUNICIPAL = "MUNICIPAL"
 
 
-class ElectionType(Enum):
-    PERSONAL = 1
-    REPRESENTATIVE = 2
+class ElectionType(str, Enum):
+    PERSONAL = "PERSONAL"
+    REPRESENTATIVE = "REPRESENTATIVE"
 
 
-class ElectionLocationType(Enum):
-    MUNICIPAL_DISTRICT = 1
-    CITY_RURAL = 2
+class ElectionLocationType(str, Enum):
+    MUNICIPAL_DISTRICT = "MUNICIPAL_DISTRICT"
+    CITY_RURAL = "CITY_RURAL"

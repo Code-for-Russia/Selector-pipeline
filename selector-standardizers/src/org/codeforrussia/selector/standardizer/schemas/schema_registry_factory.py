@@ -34,6 +34,9 @@ class StandardProtocolSchemaRegistryFactory(object):
                 with open(str(schemas_dir / "federal" / "state_duma_1_0.avsc"), "rb") as state_duma_schema_file:
                     self._registered_schemas[(ElectionLevel.FEDERAL, ElectionType.REPRESENTATIVE, None)] = parse_schema(json.load(state_duma_schema_file), named_schemas)
 
+                with open(str(schemas_dir / "regional" / "head_1_0.avsc"), "rb") as regional_head_file:
+                    self._registered_schemas[(ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)] = parse_schema(json.load(regional_head_file), named_schemas)
+
             def get_common_election_schema(self) -> Dict:
                 """
                 Returns election schema with common attributes for protocols of different kinds
@@ -44,13 +47,13 @@ class StandardProtocolSchemaRegistryFactory(object):
             def get_all_registered_schema_keys(self) -> List[Tuple[ElectionLevel, ElectionType, ElectionLocationType]]:
                 return list(self._registered_schemas.keys())
 
-            def search_schema(self, level: ElectionLevel, type: ElectionType, location: ElectionLocationType = None):
+            def search_schema(self, level: ElectionLevel, type: ElectionType, location: ElectionLocationType = None) -> Dict:
                 """
                 Searches the standardized schema by criteria
-                :param level:
-                :param type:
-                :param location:
-                :return:
+                :param level: election level
+                :param type: election type
+                :param location: election location type
+                :return: schema as dict
                 """
                 try:
                     return self._registered_schemas[(level, type, location)]
