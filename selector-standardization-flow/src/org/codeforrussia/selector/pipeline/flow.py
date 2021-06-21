@@ -14,6 +14,7 @@ OUTPUT_LOCAL_DATA_PATH = f"{AIRFLOW_HOME_DIR}/{STANDARDIZED_DATA_FOLDER}"
 
 # Google cloud storage parameters
 GCS_BUCKET = "codeforrussia-selector"
+GCS_ML_MODELS_PREFIX = "ml-models"
 GCS_INPUT_DATA_PATH = f"gs://{GCS_BUCKET}/shpilkin_dumps/*"
 GCS_INPUT_DUMP_FORMAT = "SHPILKIN"
 GCS_CREDENTIALS_FILE = f"{AIRFLOW_HOME_DIR}/google-configs/carbide-program-314404-b1f3be733966.json"
@@ -41,11 +42,13 @@ with models.DAG(
                           "input-data-format": GCS_INPUT_DUMP_FORMAT,
                           "output": OUTPUT_LOCAL_DATA_PATH,
                           "google-application-credentials": GCS_CREDENTIALS_FILE,
+                          "gcs-bucket-name": GCS_BUCKET,
+                          "ml-models-gcs-prefix": GCS_ML_MODELS_PREFIX,
                           },
         py_requirements=[
             "apache-beam[gcp]==2.29.0",
-            "selector-standardizers>=0.1.0",
-            "selector-standardization-beam>=0.3.0",
+            "selector-standardizers>=0.3.2",
+            "selector-standardization-beam>=0.4.2",
         ],
         py_interpreter='python3',
         py_system_site_packages=False,
