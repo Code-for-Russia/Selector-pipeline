@@ -49,6 +49,11 @@ class StandardizerRegistryFactory(object):
                 except KeyError:
                     raise NotImplementedError(f"This input data format is not supported yet: {data_format}")
 
-        return StandardizerRegistry(schema_registry_factory, protocol_recognizer_registry_factory, global_config)
+        return StandardizerRegistry(schema_registry_factory,
+                                    protocol_recognizer_registry_factory,
+                                    global_config=GlobalConfig( # Copy global config to trigger post_init and setting environment variable
+                                        gcs_bucket=global_config.gcs_bucket,
+                                        ml_models_gcs_prefix=global_config.ml_models_gcs_prefix,
+                                        gcs_credentials=global_config.gcs_credentials))
 
     get_standardizer_registry = staticmethod(get_standardizer_registry)

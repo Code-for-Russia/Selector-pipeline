@@ -7,7 +7,6 @@ from org.codeforrussia.selector.standardizer.election_layers import ElectionLeve
 from org.codeforrussia.selector.standardizer.recognizers.protocol_field_recognizer_registry_factory import \
     ProtocolFieldRecognizerRegistryFactory
 from org.codeforrussia.selector.standardizer.schemas.schema_registry_factory import StandardProtocolSchemaRegistryFactory
-from tqdm import tqdm
 
 class Standardizer(ABC):
 
@@ -46,7 +45,7 @@ class Standardizer(ABC):
             else:
                 return None
 
-        return [tuple_to_dict(self.convert(protocol_data)) for protocol_data in tqdm(batch, total=len(batch))]
+        return [tuple_to_dict(self.convert(protocol_data)) for protocol_data in batch]
 
 
 
