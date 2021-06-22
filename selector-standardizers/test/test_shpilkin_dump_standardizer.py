@@ -39,9 +39,9 @@ class TestShpilkinDumpStandardizer(unittest.TestCase):
         self.assertEqual(1183, actual[1]["sdata"]["canceled"])
 
     def test_on_regional_heads(self):
-        actual = TestShpilkinDumpStandardizer.standardizer.convert_batch(list(TestShpilkinDumpStandardizer.regional_head_data)[:10])
+        actual = TestShpilkinDumpStandardizer.standardizer.convert_batch(list(TestShpilkinDumpStandardizer.regional_head_data)[:100])
 
-        self.assertEqual(10, len(actual), "Expected length does not match")
+        self.assertEqual(100, len(actual), "Expected length does not match")
         self.assertEqual("AREA", actual[0]["sdata"]["election"]["commission_level"])
         self.assertEqual(0, actual[0]["sdata"]["unaccounted"])
         self.assertEqual(10, actual[0]["sdata"]["issued_to_mobile"])

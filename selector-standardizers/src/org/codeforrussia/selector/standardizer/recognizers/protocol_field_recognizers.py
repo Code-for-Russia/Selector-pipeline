@@ -3,10 +3,12 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import List, Dict
+from typing import List, Dict, Union
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 import logging
+
+from torch import Tensor
 
 from org.codeforrussia.selector.config.global_config import GlobalConfig
 from org.codeforrussia.selector.utils.gcs import GCS
@@ -86,13 +88,26 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
             unzip(output_local_filename, output_local_dir)
 
             return SentenceTransformer(str(Path(output_local_dir) / model_file_dir))
+
+    def listToTuple(function):
+        def wrapper(*args):
+            args = [tuple(x) if type(x) == list else x for x in args]
+            result = function(*args)
+            result = tuple(result) if type(result) == list else result
+            return result
+        return wrapper
+
+    @listToTuple
+    @lru_cache(maxsize=200)
+    def encode_sentences(self, sentences: List[str]) -> Union[List[Tensor], np.ndarray, Tensor]:
+        return self.model.encode(sentences, convert_to_tensor=True)
         
     def recognize(self, protocol_data: List[ProtocolRow], schema: Dict) -> Dict:
         standard_protocol_fields = [f for f in schema['fields'] if 'doc' in f and f['doc'].startswith(self.PROTOCOL_FIELD_PATTERN)]
         standard_protocol_field_names = [f['doc'].split(':')[1].strip() for f in standard_protocol_fields]
-        standardized_field_embeddings = self.model.encode(standard_protocol_field_names, convert_to_tensor=True)
+        standardized_field_embeddings = self.encode_sentences(standard_protocol_field_names)
         protocol_fields = [f.line_name for f in protocol_data]
-        protocol_field_embeddings = self.model.encode(protocol_fields, convert_to_tensor=True)
+        protocol_field_embeddings = self.encode_sentences(protocol_fields)
         cosine_scores = util.pytorch_cos_sim(protocol_field_embeddings, standardized_field_embeddings)
 
         standardized_protocol_data = {}
