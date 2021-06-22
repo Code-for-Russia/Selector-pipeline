@@ -47,8 +47,8 @@ with models.DAG(
                           },
         py_requirements=[
             "apache-beam[gcp]==2.29.0",
-            "selector-standardizers>=0.3.2",
-            "selector-standardization-beam>=0.4.2",
+            "selector-standardizers>=0.4.0",
+            "selector-standardization-beam>=0.4.5",
         ],
         py_interpreter='python3',
         py_system_site_packages=False,
