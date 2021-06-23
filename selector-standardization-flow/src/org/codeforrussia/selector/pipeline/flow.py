@@ -56,7 +56,7 @@ with models.DAG(
 
     upload_to_gcs = LocalFilesystemToGCSOperator(
         task_id="upload_standardized_data_to_gcs",
-        src=f"{OUTPUT_LOCAL_DATA_PATH}/*",
+        src=f"{OUTPUT_LOCAL_DATA_PATH}/*.avro",
         bucket="codeforrussia-selector",
         dst=f"{STANDARDIZED_DATA_FOLDER}/" + dedent("{{ds}}/"), # output data grouped in the today-date folder
     )
