@@ -64,10 +64,10 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
     """
     Recognizes protocol fields based on name similarity w.r.t. standard schema fields. There are regional electoral laws, defining the standard of protocol fields. To avoid manual work of collecting all regional  laws, we introduce a universal protocol field schema for all regions and take advantage of ML-based NLP model for recognition.
     """
-    MODEL_VERSION = "1_0_0"
+    MODEL_VERSION = "1_1_0"
 
     def __init__(self, global_config: GlobalConfig):
-            self.MODEL_THRESHOLD = 0.79
+            self.MODEL_THRESHOLD = 0.80
             self._global_config = global_config
 
     @property
@@ -111,13 +111,20 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
         cosine_scores = util.pytorch_cos_sim(protocol_field_embeddings, standardized_field_embeddings)
 
         standardized_protocol_data = {}
+        max_score_indices = set()
         for i in range(len(protocol_fields)):
-            max_score_index = np.argmax(cosine_scores[i])
-            if cosine_scores[i][max_score_index] > self.MODEL_THRESHOLD:
-                if cosine_scores[i][max_score_index] < 1: # log the stats of non-exact matches
-                    logging.debug("{}\t{}\t{:.4f}".format(protocol_fields[i], standard_protocol_field_names[max_score_index], cosine_scores[i][max_score_index]))
+            max_score_index = np.argmax(cosine_scores[i]).item()
+
+            max_similarity_score = cosine_scores[i][max_score_index]
+            if max_similarity_score > self.MODEL_THRESHOLD:
+                assert max_score_index not in max_score_indices, f"Model gives an invalid repetitive prediction: '{standard_protocol_fields[max_score_index]['name']}' duplicate on {protocol_fields[i]} with score={max_similarity_score}"
+                max_score_indices.add(max_score_index)
+            
+                if max_similarity_score < 1: # log the stats of non-exact matches
+                    logging.debug("{}\t{}\t{:.4f}".format(protocol_fields[i], standard_protocol_field_names[max_score_index], max_similarity_score))
+                    
                 standardized_protocol_data[standard_protocol_fields[max_score_index]["name"]] = protocol_data[max_score_index].line_value
             else:
-                logging.debug(f"Could not recognize this protocol field: {protocol_fields[i]}")
-        
+                logging.debug(f"Could not recognize this protocol field: {protocol_fields[i]}. Score {max_similarity_score} below threshold = {self.MODEL_THRESHOLD}")
+
         return standardized_protocol_data

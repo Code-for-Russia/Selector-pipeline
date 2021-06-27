@@ -1,22 +1,21 @@
 import argparse
 from typing import Generator, Tuple
 
-from sentence_transformers import SentenceTransformer,  SentencesDataset, LoggingHandler, losses
+from sentence_transformers import SentenceTransformer,  SentencesDataset, losses, models
 from sentence_transformers.readers import InputExample
 from torch.utils.data import DataLoader
-from sentence_transformers.evaluation import BinaryClassificationEvaluator, TripletEvaluator
+from sentence_transformers.evaluation import BinaryClassificationEvaluator
 import logging
 from random import choice, shuffle
-from sklearn.model_selection import train_test_split
 
 from org.codeforrussia.selector.standardizer.election_layers import ElectionLevel, ElectionType, ElectionLocationType
 from org.codeforrussia.selector.standardizer.schemas.schema_registry_factory import \
     StandardProtocolSchemaRegistryFactory
 
-BATCH_SIZE=64
-EPOCHS=1
-TEST_SIZE=0.25
-TRIPLET_MARGIN=0.1
+BATCH_SIZE=100
+EPOCHS=5
+TEST_SIZE=0.1
+TRIPLET_MARGIN=1
 
 
 def get_anchor_name(anchor) -> str:
@@ -70,48 +69,62 @@ def run():
                         dest='base_model',
                         required=False,
                         type=str,
-                        default="distiluse-base-multilingual-cased-v1",
-                        help='Base pre-trained model (by default, Multi-lingual Transformer-based Universal Sentence Encoder), which will be fine-tuned with triplet loss. See https://www.sbert.net/docs/pretrained_models.html')
+                        default="DeepPavlov/rubert-base-cased-sentence",
+                        help='Base pre-trained model (by default, sentence encoder based on DeepPavlov RuBERT), which will be fine-tuned with triplet loss. See https://www.sbert.net/docs/pretrained_models.html')
 
     args = parser.parse_args()
 
     schema_registry = StandardProtocolSchemaRegistryFactory.get_schema_registry()
     standard_schema = schema_registry.search_schema(args.election_level, args.election_type, args.election_location_type)
     protocol_fields = [f for f in standard_schema["fields"] if 'doc' in f and f['doc'].startswith("Строка")]
-    # Train / val split
-    train_anchors, val_anchors = train_test_split(protocol_fields, test_size=TEST_SIZE, random_state=17)
+    # No train/validation split, because of small data
+    # TODO: add cross-validation
+    train_anchors = protocol_fields
     # Train data
     train_data = list(generate_train_data(train_anchors))
     shuffle(train_data)
     train_examples = [InputExample(texts=list(t)) for t in train_data]
     print(f"Training examples: {len(train_examples)}")
     # Model
-    model = SentenceTransformer(args.base_model)
+    base_model = models.Transformer(args.base_model)
+    pooling_model = models.Pooling(base_model.get_word_embedding_dimension())
+    model = SentenceTransformer(modules=[base_model, pooling_model])
+    
         
     train_dataset = SentencesDataset(train_examples, model)
     train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=BATCH_SIZE)
     train_loss = losses.TripletLoss(model=model, triplet_margin=TRIPLET_MARGIN)
     # Validation data
-    val_data = list(generate_train_data(val_anchors))
-    shuffle(val_data)
-    positives = [(anchor, positive, 1) for anchor, positive, _ in val_data]
-    negatives = [(anchor, negative, 0) for anchor, _, negative in val_data]
-    evaluation_set = positives + negatives
-    evaluator = BinaryClassificationEvaluator(sentences1=[s1 for s1, _,_ in evaluation_set],
-                                              sentences2=[s2 for _, s2,_ in evaluation_set],
-                                              labels=[l for _, _, l in evaluation_set],
-                                              name="evaluation",
-                                              show_progress_bar=True)
-    print(f"Validation examples: {len(val_data)}")
+    # print("The following examples fall into validation set:\n", val_anchors)
+    # val_data = list(generate_train_data(val_anchors))
+    # shuffle(val_data)
+    # positives = [(anchor, positive, 1) for anchor, positive, _ in val_data]
+    # negatives = [(anchor, negative, 0) for anchor, _, negative in val_data]
+    # evaluation_set = positives + negatives
+    # evaluator = BinaryClassificationEvaluator(sentences1=[s1 for s1, _,_ in evaluation_set],
+    #                                           sentences2=[s2 for _, s2,_ in evaluation_set],
+    #                                           labels=[l for _, _, l in evaluation_set],
+    #                                           name="evaluation",
+    #                                           show_progress_bar=True)
+    # print(f"Validation examples: {len(val_data)}")
+
     # evaluator = TripletEvaluator(anchors=[a for a, _,_ in val_data],
     #                              positives=[p for _, p,_ in val_data],
     #                              negatives=[n for _, _,n in val_data],
     #                              name="val_triplet_loss",
     #                              show_progress_bar=True)
 
+    # Check only training accuracy
+    positives = [(anchor, positive, 1) for anchor, positive, _ in train_data]
+    negatives = [(anchor, negative, 0) for anchor, _, negative in train_data]
+    evaluation_set = positives + negatives
+    evaluator = BinaryClassificationEvaluator(sentences1=[s1 for s1, _,_ in evaluation_set],
+                                              sentences2=[s2 for _, s2,_ in evaluation_set],
+                                              labels=[l for _, _, l in evaluation_set],
+                                              name="evaluation",
+                                              show_progress_bar=True)
+
     model.fit(train_objectives=[(train_dataloader, train_loss)], epochs=EPOCHS, warmup_steps=0, evaluator=evaluator, evaluation_steps=1, show_progress_bar=True, output_path=args.output_model_dir, checkpoint_save_steps=1)
-
-
 
 
 if __name__ == '__main__':
