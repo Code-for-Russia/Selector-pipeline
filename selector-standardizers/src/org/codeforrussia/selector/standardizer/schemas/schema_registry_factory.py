@@ -37,6 +37,9 @@ class StandardProtocolSchemaRegistryFactory(object):
                 with open(str(schemas_dir / "regional" / "head_1_0.avsc"), "rb") as regional_head_file:
                     self._registered_schemas[(ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)] = parse_schema(json.load(regional_head_file), named_schemas)
 
+                with open(str(schemas_dir / "municipal" / "deputy_city_1_0.avsc"), "rb") as municipal_deputy_city_file:
+                    self._registered_schemas[(ElectionLevel.MUNICIPAL, ElectionType.REPRESENTATIVE, ElectionLocationType.CITY_RURAL)] = parse_schema(json.load(municipal_deputy_city_file), named_schemas)
+
             def get_common_election_schema(self) -> Dict:
                 """
                 Returns election schema with common attributes for protocols of different kinds

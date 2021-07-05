@@ -31,7 +31,11 @@ class Standardizer(ABC):
         """
         if "УИК " in election_location[-1]:
             return self.commission_levels[-1]
-        else:
+        elif any(x in election_location[-1] for x in ["ТИК", "округ"]):
+            return self.commission_levels[-2]
+        elif "ОИК" in election_location[-1]:
+            return self.commission_levels[-3]
+        else: # Fallback is territorial
             return self.commission_levels[-2]
 
     def convert_batch(self, batch: List[Dict]) -> List[Optional[Dict]]:

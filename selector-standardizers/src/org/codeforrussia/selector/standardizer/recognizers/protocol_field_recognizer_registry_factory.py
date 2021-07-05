@@ -12,10 +12,14 @@ class ProtocolFieldRecognizerRegistryFactory(object):
             Registry of supported election levels and their recognizers
             """
             def __init__(self, global_config: GlobalConfig):
-
+                # share the same similarity model
+                similarity_based_protocol_recognizer = SimilarityBasedProtocolRecognizer(
+                                                            global_config=global_config,                                                                             model_name="similarity-protocol-recognizer_1_3_0",
+                )
                 self.recognizers = {
                     ElectionLevel.FEDERAL: LineNumberBasedProtocolRecognizer(),
-                    ElectionLevel.REGIONAL: SimilarityBasedProtocolRecognizer(global_config=global_config),
+                    ElectionLevel.REGIONAL: similarity_based_protocol_recognizer,
+                    ElectionLevel.MUNICIPAL: similarity_based_protocol_recognizer,
                 }
 
             def get_recognizer(self, election_level: ElectionLevel) -> ProtocolFieldRecognizer:

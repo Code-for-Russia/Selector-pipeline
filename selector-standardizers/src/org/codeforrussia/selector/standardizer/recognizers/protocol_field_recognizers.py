@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from typing import List, Dict, Union
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
@@ -63,18 +63,18 @@ class LineNumberBasedProtocolRecognizer(ProtocolFieldRecognizer):
 class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
     """
     Recognizes protocol fields based on name similarity w.r.t. standard schema fields. There are regional electoral laws, defining the standard of protocol fields. To avoid manual work of collecting all regional  laws, we introduce a universal protocol field schema for all regions and take advantage of ML-based NLP model for recognition.
-    """
-    MODEL_VERSION = "1_1_0"
 
-    def __init__(self, global_config: GlobalConfig):
-            self.MODEL_THRESHOLD = 0.80
-            self._global_config = global_config
+    The core ML model is loaded lazily.
+    """
+    def __init__(self, global_config: GlobalConfig, model_name: str):
+        self.MODEL_THRESHOLD = 0.80
+        self._global_config = global_config
+        self._model_name = model_name
 
     @property
     @lru_cache()
     def model(self):
-        model_file_dir = f"similarity-protocol-recognizer_{self.MODEL_VERSION}"
-        model_file_name = f"{model_file_dir}.zip"
+        model_file_name = f"{self._model_name}.zip"
         with TemporaryDirectory() as output_local_dir:
             output_local_filename = str(Path(output_local_dir) / model_file_name)
             logging.debug(f"Loading model='{model_file_name}' from GCS...")
@@ -86,8 +86,7 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
             logging.debug("Model downloaded")
             logging.debug("Model unzipping...")
             unzip(output_local_filename, output_local_dir)
-
-            return SentenceTransformer(str(Path(output_local_dir) / model_file_dir))
+            return SentenceTransformer(str(Path(output_local_dir) / self._model_name))
 
     def listToTuple(function):
         def wrapper(*args):
@@ -104,8 +103,14 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
         
     def recognize(self, protocol_data: List[ProtocolRow], schema: Dict) -> Dict:
         standard_protocol_fields = [f for f in schema['fields'] if 'doc' in f and f['doc'].startswith(self.PROTOCOL_FIELD_PATTERN)]
-        standard_protocol_field_names = [f['doc'].split(':')[1].strip() for f in standard_protocol_fields]
-        standardized_field_embeddings = self.encode_sentences(standard_protocol_field_names)
+        standard_protocol_aliases = {a: f for f in standard_protocol_fields for a in f['aliases']}
+        for f in standard_protocol_fields:
+            standard_protocol_aliases[f['doc'].split(':')[1].strip()] = f
+
+        standardized_field_names = [*standard_protocol_aliases]
+
+        standardized_field_embeddings = self.encode_sentences(standardized_field_names)
+
         protocol_fields = [f.line_name for f in protocol_data]
         protocol_field_embeddings = self.encode_sentences(protocol_fields)
         cosine_scores = util.pytorch_cos_sim(protocol_field_embeddings, standardized_field_embeddings)
@@ -117,13 +122,18 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
 
             max_similarity_score = cosine_scores[i][max_score_index]
             if max_similarity_score > self.MODEL_THRESHOLD:
-                assert max_score_index not in max_score_indices, f"Model gives an invalid repetitive prediction: '{standard_protocol_fields[max_score_index]['name']}' duplicate on {protocol_fields[i]} with score={max_similarity_score}"
+                standard_field_id = standard_protocol_aliases[standardized_field_names[max_score_index]]['name']
+                assert max_score_index not in max_score_indices, f"Model gives an invalid repetitive prediction: '{standard_field_id}' duplicate on {protocol_fields[i]} with score={max_similarity_score}"
                 max_score_indices.add(max_score_index)
             
                 if max_similarity_score < 1: # log the stats of non-exact matches
-                    logging.debug("{}\t{}\t{:.4f}".format(protocol_fields[i], standard_protocol_field_names[max_score_index], max_similarity_score))
+                    logging.debug("{}\t{} ({})\t{:.4f}".format(
+                        protocol_fields[i],
+                        standardized_field_names[max_score_index],
+                        standard_field_id,
+                        max_similarity_score))
                     
-                standardized_protocol_data[standard_protocol_fields[max_score_index]["name"]] = protocol_data[max_score_index].line_value
+                standardized_protocol_data[standard_field_id] = protocol_data[i].line_value
             else:
                 logging.debug(f"Could not recognize this protocol field: {protocol_fields[i]}. Score {max_similarity_score} below threshold = {self.MODEL_THRESHOLD}")
 

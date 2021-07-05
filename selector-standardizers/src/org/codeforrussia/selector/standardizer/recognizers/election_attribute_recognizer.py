@@ -14,10 +14,16 @@ class ElectionAttributeRecognizer:
         if "депутатов государственной думы" in lowercased_election_name:
             return (ElectionLevel.FEDERAL, ElectionType.REPRESENTATIVE, None)
         elif any(all(pp in lowercased_election_name for pp in p) for p in [
+            ["депутат", "город", "дум"],
+            ["депутат", "город", "совет"],
+            ["депутат", "город", "собран"],
+        ]):
+            return (ElectionLevel.MUNICIPAL, ElectionType.REPRESENTATIVE, ElectionLocationType.CITY_RURAL)
+        elif any(all(pp in lowercased_election_name for pp in p) for p in [
             ["губернатор"],
             ["президент", "республик"],
             ["глав", "республик"],
-            ["глав", "администрац", "област"]
+            ["глав", "администрац", "област"],
         ]):
             return (ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)
         else:
