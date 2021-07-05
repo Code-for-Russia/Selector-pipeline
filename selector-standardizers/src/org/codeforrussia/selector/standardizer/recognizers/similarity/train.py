@@ -14,9 +14,9 @@ from org.codeforrussia.selector.standardizer.schemas.schema_registry_factory imp
     StandardProtocolSchemaRegistryFactory
 import pandas as pd
 
-BATCH_SIZE=64
-EPOCHS=5
-NEGATIVE_RANDOM_SAMPLES = 7
+BATCH_SIZE=128
+EPOCHS=3
+NEGATIVE_RANDOM_SAMPLES = 5
 # One schema is for train, another is for validation
 # TODO: add cross-validation
 TRAIN_SCHEMA = (ElectionLevel.MUNICIPAL, ElectionType.REPRESENTATIVE, ElectionLocationType.CITY_RURAL)

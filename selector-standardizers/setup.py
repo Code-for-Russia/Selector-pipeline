@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='selector-standardizers',
-    version='0.6.0',
+    version='0.6.2',
     description='Electoral Data Standardization classes for the Selector project',
     long_description=open("README.md", encoding='utf-8').read(),
     long_description_content_type="text/markdown",
@@ -15,6 +15,7 @@ setup(
         'org.codeforrussia.selector.standardizer.schemas.common': ['*.avsc'],
         'org.codeforrussia.selector.standardizer.schemas.federal': ['*.avsc'],
         'org.codeforrussia.selector.standardizer.schemas.regional': ['*.avsc'],
+        'org.codeforrussia.selector.standardizer.schemas.municipal': ['*.avsc'],
                   },
     install_requires=[
         'pytest>=6.2.4',

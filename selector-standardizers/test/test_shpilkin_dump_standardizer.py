@@ -32,14 +32,12 @@ class TestShpilkinDumpStandardizer(unittest.TestCase):
             global_config=global_config,
         )
 
-    
     def test_on_state_duma(self):
         actual = TestShpilkinDumpStandardizer.standardizer.convert_batch(list(TestShpilkinDumpStandardizer.state_duma_data))
         self.assertEqual(2, len(actual), "Expected length does not match")
         self.assertEqual("TERRITORY", actual[0]["sdata"]["election"]["commission_level"])
         self.assertEqual(18476, actual[0]["sdata"]["valid"])
         self.assertEqual(1183, actual[1]["sdata"]["canceled"])
-
 
     def test_on_regional_heads(self):
         actual = TestShpilkinDumpStandardizer.standardizer.convert_batch(list(TestShpilkinDumpStandardizer.regional_head_data)[:100])
@@ -50,14 +48,12 @@ class TestShpilkinDumpStandardizer(unittest.TestCase):
         self.assertEqual(10, actual[0]["sdata"]["issued_to_mobile"])
         self.assertEqual(79, actual[0]["sdata"]["issued_ahead"])
 
-
     def test_on_smolensk_regional_heads(self):
         actual = TestShpilkinDumpStandardizer.standardizer.convert_batch([d for d in TestShpilkinDumpStandardizer.regional_head_data if d["loc"][0] == "Выборы Губернатора Смоленской области"][:10])
         self.assertEqual(10, len(actual), "Expected length does not match")
         self.assertEqual(216, actual[0]["sdata"]["voters"], "Number of voters must be equal to expected")
         for a in actual:
             self.assertGreater(a["sdata"]["voters"], 0, "Number of voters must be greater than 0")
-
 
     def test_on_kamchatka_regional_heads(self):
         actual = TestShpilkinDumpStandardizer.standardizer.convert_batch([d for d in TestShpilkinDumpStandardizer.regional_head_data if d["loc"][0] == "Досрочные выборы Губернатора Камчатского края"][:10])
@@ -68,9 +64,9 @@ class TestShpilkinDumpStandardizer(unittest.TestCase):
             self.assertGreater(a["sdata"]["issued_to_commission"], 0, "Number of voters must be greater than 0")
 
     def test_on_municipal_deputy_city(self):
-        actual = TestShpilkinDumpStandardizer.standardizer.convert_batch(list(TestShpilkinDumpStandardizer.municipal_deputy_city_data)[:1])
-        print(actual)
-        self.assertEqual(1, len(actual), "Expected length does not match")
+        actual = TestShpilkinDumpStandardizer.standardizer.convert_batch(list(TestShpilkinDumpStandardizer.municipal_deputy_city_data)[:100])
+        
+        self.assertEqual(100, len(actual), "Expected length does not match")
         self.assertEqual("TERRITORY", actual[0]["sdata"]["election"]["commission_level"])
         self.assertEqual(0, actual[0]["sdata"]["issued_absentee_certificates_to_territorial"])
         self.assertEqual(1473, actual[0]["sdata"]["issued_to_commission"])
