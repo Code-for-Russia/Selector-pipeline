@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='selector-standardization-beam',
-    version='0.4.10',
+    version='0.4.11',
     description='Data Standardization pipeline in Apache Beam for Selector project',
     long_description=open("README.md", encoding='utf-8').read(),
     long_description_content_type="text/markdown",
@@ -15,7 +15,7 @@ setup(
         'pytest>=6.2.4',
         'fastavro>=1.4.0',
         'apache-beam>=2.20.0',
-        'selector-standardizers>=0.6.2'
+        'selector-standardizers>=0.7.0'
     ],
     include_package_data=True,
     python_requires='>=3.7'
