@@ -67,7 +67,7 @@ class SimilarityBasedProtocolRecognizer(ProtocolFieldRecognizer):
     The core ML model is loaded lazily.
     """
     def __init__(self, global_config: GlobalConfig, model_name: str):
-        self.MODEL_THRESHOLD = 0.80
+        self.MODEL_THRESHOLD = 0.83
         self._global_config = global_config
         self._model_name = model_name
 
