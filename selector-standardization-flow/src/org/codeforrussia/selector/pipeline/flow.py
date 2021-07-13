@@ -17,7 +17,7 @@ GCS_BUCKET = "codeforrussia-selector"
 GCS_ML_MODELS_PREFIX = "ml-models"
 GCS_INPUT_DATA_PATH = f"gs://{GCS_BUCKET}/shpilkin_dumps/*"
 GCS_INPUT_DUMP_FORMAT = "SHPILKIN"
-GCS_CREDENTIALS_FILE = f"{AIRFLOW_HOME_DIR}/google-configs/carbide-program-314404-b1f3be733966.json"
+GCS_CREDENTIALS_FILE = f"{AIRFLOW_HOME_DIR}/google-configs/gcs-credentials.json"
 
 default_args = {
     'owner': 'airflow',

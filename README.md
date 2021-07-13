@@ -19,10 +19,10 @@ ETL пайпланы для проекта Selector ([Идея](https://github.c
  - Стартовать Airflow
  > docker compose up
 
-2) Открыть Airflow [локально](http://localhost:8080), установить логин/пароль администратора и сделать активным	_selector_standardize_electoral_data_ flow.
+2) Открыть Airflow [локально](http://localhost:8080), установить логин/пароль администратора и сделать активным	_selector_standardize_electoral_data_ flow.                     
 
 ## Сервис
-
+                                                            
 Референсный пример сервиса развернут в тестовом режиме и пишет стандартизированные данные каждый день в папку gs://codeforrussia-selector/standardized-election-data, группируя по датам.
 
 ## Чтение стандартизированных файлов
