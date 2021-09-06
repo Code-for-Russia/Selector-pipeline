@@ -26,5 +26,12 @@ class ElectionAttributeRecognizer:
             ["глав", "администрац", "област"],
         ]):
             return (ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)
+        elif any(all(pp in lowercased_election_name for pp in p) for p in [
+            ["депутат", "совет", "республик"],
+            ["депутат", "собран", "област"],
+            ["депутат", "думы", "област"],
+            ["депутат", "собран", "автоном", "округ"],
+        ]):
+            return (ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)
         else:
             raise NotImplementedError(f"Cannot recognize election attributes by this election name: {election_name}")

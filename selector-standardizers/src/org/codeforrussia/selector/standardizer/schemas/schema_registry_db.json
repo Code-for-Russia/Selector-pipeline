@@ -1,0 +1,26 @@
+[
+  {
+    "election_level": "FEDERAL",
+    "election_type": "REPRESENTATIVE",
+    "election_location_type": null,
+    "schema_path": "federal/state_duma_1_0.avsc"
+  },
+  {
+    "election_level": "REGIONAL",
+    "election_type": "PERSONAL",
+    "election_location_type": null,
+    "schema_path": "regional/head_1_0.avsc"
+  },
+  {
+    "election_level": "REGIONAL",
+    "election_type": "PERSONAL",
+    "election_location_type": null,
+    "schema_path": "regional/head_1_0.avsc"
+  },
+  {
+    "election_level": "MUNICIPAL",
+    "election_type": "REPRESENTATIVE",
+    "election_location_type": "CITY_RURAL",
+    "schema_path": "municipal/deputy_city_1_0.avsc"
+  }
+]

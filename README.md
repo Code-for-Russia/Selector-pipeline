@@ -7,16 +7,18 @@ ETL пайпланы для проекта Selector ([Идея](https://github.c
 ## Установка
 
 1) Развернуть Airflow
-
- - Скачать Docker Image для Airflow:
+- Скачать Docker Image для Airflow:
  > docker pull nzhiltsov/selector-airflow:0.1
 
- - Скопировать docker-compose.yaml в $AIRFLOW_HOME_DIR
- - Скопировать selector-standardization-flow в $AIRFLOW_HOME_DIR/dags:
+- Скопировать docker-compose.yaml в $AIRFLOW_HOME_DIR
+
+- Следовать инструкциям [Airflow in Docker](https://airflow.apache.org/docs/apache-airflow/2.0.1/start/docker.html)
+
+- Скопировать selector-standardization-flow в $AIRFLOW_HOME_DIR/dags:
  > rsync -rv --exclude=.git --exclude=build --exclude=selector_standardization_flow.egg-info --exclude=dist --exclude=__pycache__ selector-standardization-flow $AIRFLOW_HOME_DIR/dags
 
- - Сгенерировать файл для соединения с Google Cloud Storage (GCS) и скопировать его в $AIRFLOW_HOME_DIR/google-configs/gcs-credentials.json
- - Стартовать Airflow
+- Сгенерировать файл для соединения с Google Cloud Storage (GCS) и скопировать его в $AIRFLOW_HOME_DIR/google-configs/gcs-credentials.json
+- Стартовать Airflow
  > docker compose up
 
 2) Открыть Airflow [локально](http://localhost:8080), установить логин/пароль администратора и сделать активным	_selector_standardize_electoral_data_ flow.                     

@@ -31,14 +31,14 @@ class StandardProtocolSchemaRegistryFactory(object):
                 with open( str(schemas_dir / "common" / "election_1_0.avsc"), "rb") as election_schema_file:
                     self._election_schema = parse_schema(json.load(election_schema_file), named_schemas)
 
-                with open(str(schemas_dir / "federal" / "state_duma_1_0.avsc"), "rb") as state_duma_schema_file:
-                    self._registered_schemas[(ElectionLevel.FEDERAL, ElectionType.REPRESENTATIVE, None)] = parse_schema(json.load(state_duma_schema_file), named_schemas)
-
-                with open(str(schemas_dir / "regional" / "head_1_0.avsc"), "rb") as regional_head_file:
-                    self._registered_schemas[(ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)] = parse_schema(json.load(regional_head_file), named_schemas)
-
-                with open(str(schemas_dir / "municipal" / "deputy_city_1_0.avsc"), "rb") as municipal_deputy_city_file:
-                    self._registered_schemas[(ElectionLevel.MUNICIPAL, ElectionType.REPRESENTATIVE, ElectionLocationType.CITY_RURAL)] = parse_schema(json.load(municipal_deputy_city_file), named_schemas)
+                with open( str(schemas_dir / "schema_registry_db.json"), "rb") as schema_registry_db_file:
+                    schema_registry_db = json.load(schema_registry_db_file)
+                    for schema_metadata in schema_registry_db:
+                        with open(str(schemas_dir / schema_metadata["schema_path"]), "rb") as schema_metadata_file_path:
+                            schema_key = (ElectionLevel[schema_metadata["election_level"]],
+                                     ElectionType[schema_metadata["election_type"]],
+                                     ElectionLocationType[schema_metadata["election_location_type"]] if schema_metadata["election_location_type"] is not None else None)
+                            self._registered_schemas[schema_key] = parse_schema(json.load(schema_metadata_file_path), named_schemas)
 
             def get_common_election_schema(self) -> Dict:
                 """
