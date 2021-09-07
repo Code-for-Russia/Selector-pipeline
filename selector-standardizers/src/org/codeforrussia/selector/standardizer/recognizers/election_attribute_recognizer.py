@@ -32,6 +32,6 @@ class ElectionAttributeRecognizer:
             ["депутат", "думы", "област"],
             ["депутат", "собран", "автоном", "округ"],
         ]):
-            return (ElectionLevel.REGIONAL, ElectionType.PERSONAL, None)
+            return (ElectionLevel.REGIONAL, ElectionType.REPRESENTATIVE, None)
         else:
             raise NotImplementedError(f"Cannot recognize election attributes by this election name: {election_name}")

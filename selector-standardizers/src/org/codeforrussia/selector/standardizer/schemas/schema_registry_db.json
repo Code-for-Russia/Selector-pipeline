@@ -13,9 +13,9 @@
   },
   {
     "election_level": "REGIONAL",
-    "election_type": "PERSONAL",
+    "election_type": "REPRESENTATIVE",
     "election_location_type": null,
-    "schema_path": "regional/head_1_0.avsc"
+    "schema_path": "regional/deputy_1_0.avsc"
   },
   {
     "election_level": "MUNICIPAL",
